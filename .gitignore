@@ -1,1 +1,2 @@
-*.jsonl
+*debug*.jsonl
+*.DS_Store

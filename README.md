@@ -79,14 +79,16 @@ Process-Reward-Models/
 This project was developed and tested in **Google Colab with NVIDIA A100 GPU (80GB VRAM)**.
 
 **Recommended Specifications:**
+
 - **GPU**: NVIDIA A100 (80GB) for training, T4/V100 for inference
-- **VRAM**: 
+- **VRAM**:
   - Training: 24GB+ (A100 recommended, ~7 hours for 2 epochs)
   - Inference: 16GB+ for experiments
 - **RAM**: 16GB+ system memory
 - **Storage**: ~50GB free space for models and datasets
 
 **Google Colab Tiers:**
+
 - **Free Tier (T4 GPU)**: Sufficient for running all experiments
 - **Colab Pro (V100/A100)**: Recommended for training (~7 hours on A100)
 
@@ -192,13 +194,16 @@ Before running training or experiments, you need to authenticate with HuggingFac
 
 1. Get a HuggingFace access token from [https://huggingface.co/settings/tokens](https://huggingface.co/settings/tokens)
 2. In your Colab notebook, run:
+
    ```python
    from huggingface_hub import notebook_login
    notebook_login()
    ```
+
 3. Enter your token when prompted
 
 This is required to access:
+
 - Base models (Qwen/Qwen3-8B, Qwen/Qwen3-0.6B)
 - Pre-trained PRM adapters (devangb4/prm-qwen3-8b-bf16-6k, devangb4/prm-qwen3-8b-bf16-full)
 
@@ -222,6 +227,7 @@ We provide several trained PRM checkpoints on HuggingFace:
    - Use case: Alternative trained checkpoint
 
 **Base Models** (auto-downloaded from HuggingFace):
+
 - **Qwen/Qwen3-8B**: PRM base model (8B parameters)
 - **Qwen/Qwen3-0.6B**: Generator model (600M parameters)
 
@@ -231,10 +237,12 @@ We provide several trained PRM checkpoints on HuggingFace:
 2. Open `PRM_New_Run.ipynb` for the complete training pipeline
 3. **Important**: Authenticate with HuggingFace first (see above)
 4. Configure your project path:
+
    ```python
    PROJECT_PATH = "/content/drive/MyDrive/your_project_path"
    BASE_MODEL_NAME = "Qwen/Qwen3-8B"
    ```
+
 5. The notebook includes:
    - Automatic dataset download from PRM800K
    - LoRA fine-tuning configuration
@@ -243,6 +251,7 @@ We provide several trained PRM checkpoints on HuggingFace:
    - Model export to HuggingFace format
 
 **Training Configuration:**
+
 - Epochs: 2
 - Batch size: 4 per device
 - Gradient accumulation: 4 steps
@@ -254,6 +263,7 @@ We provide several trained PRM checkpoints on HuggingFace:
 ### Dataset Information
 
 **PRM800K Dataset:**
+
 - Source: OpenAI ([GitHub](https://github.com/openai/prm800k))
 - Training: 97,782 problems → 563,181 labeled steps
 - Test: 2,762 problems → 16,153 labeled steps
@@ -281,42 +291,42 @@ upload_folder(
 
 ### Running Experiments
 
-#### Experiment 1: Best-of-N Sampling (Efficiency Curve)
+#### Experiment 1: Baseline Evaluations
 
-**Notebook**: `Experiments/PRM_Sampling_experiment.ipynb`
+**Notebook**: `Experiments/Fixed_Pool/PRM_Fixed_Pool.ipynb`
 
-**Objective**: Compare PRM-guided Best-of-N against Self-Consistency across different compute budgets.
+**Objective**: Rigorous controlled comparison using fixed candidate pools.
 
 **Setup**:
-- Dataset: 250 random problems from GSM8K test set
-- Budgets: [1, 2, 3, 4, 5, 7, 8, 9, 11, 13, 15, 16, 32, 64]
-- Generator: Qwen3-0.6B with temperature=0.7
-- PRM: devangb4/prm-qwen3-8b-bf16-6k
 
-**Methods**:
-- **Self-Consistency**: Generate N solutions, majority vote on final answers
-- **PRM Best-of-N**: Generate N solutions, select highest PRM-scored chain
+- Dataset: Full GSM8K test set (1,319 problems)
+- Pool size: 16 pre-generated candidates per problem
+- Temperature: 0.6 with few-shot prompting
+- Methods: Self-Consistency vs PRM Best-of-N on same pool
 
 **Run the experiment**:
+
 ```python
-# Open Experiments/PRM_Sampling_experiment.ipynb
-# Results saved to: efficiency_curve_data_250.jsonl
-# Plot generated as: efficiency_curve.png
+# Open Experiments/Fixed_Pool/PRM_Fixed_Pool.ipynb  
+# Uses: fixed_pool_v2_fewshot_full_test.jsonl
+# Most rigorous evaluation - controls for generation variance
 ```
 
-#### Experiment 2: Beam Search
+#### Experiment 2: Search Strategies
 
 **Notebook**: `Experiments/Beam_Search/PRM_Beam_Search_Experiment.ipynb`
 
 **Objective**: Evaluate PRM-guided beam search for structured exploration.
 
 **Setup**:
+
 - Dataset: 500 problems from GSM8K
 - Beam width (K): 4
 - Beam expansion (M): 4 candidates per position
 - Max steps: 25
 
 **Algorithm**:
+
 1. Generate K diverse initial steps
 2. For each beam, generate M continuations
 3. Score all K×M candidates with PRM
@@ -324,28 +334,36 @@ upload_folder(
 5. Repeat until solution or max steps
 
 **Run the experiment**:
+
 ```python
 # Open Experiments/Beam_Search/PRM_Beam_Search_Experiment.ipynb
 # Results saved to: beam_search_results (1).jsonl
 ```
 
-#### Experiment 3: Fixed Pool Evaluation
+#### Experiment 3: Best-of-N Sampling (Efficiency Curve)
 
-**Notebook**: `Experiments/Fixed_Pool/PRM_Fixed_Pool.ipynb`
+**Notebook**: `Experiments/Compute_Efficiency/PRM_Sampling_experiment.ipynb`
 
-**Objective**: Rigorous controlled comparison using fixed candidate pools.
+**Objective**: Compare PRM-guided Best-of-N against Self-Consistency across different compute budgets.
 
 **Setup**:
-- Dataset: Full GSM8K test set (1,319 problems)
-- Pool size: 16 pre-generated candidates per problem
-- Temperature: 0.6 with few-shot prompting
-- Methods: Self-Consistency vs PRM Best-of-N on same pool
+
+- Dataset: 250 random problems from GSM8K test set
+- Budgets: [1, 2, 3, 4, 5, 7, 8, 9, 11, 13, 15, 16, 32, 64]
+- Generator: Qwen3-0.6B with temperature=0.7
+- PRM: devangb4/prm-qwen3-8b-bf16-6k
+
+**Methods**:
+
+- **Self-Consistency**: Generate N solutions, majority vote on final answers
+- **PRM Best-of-N**: Generate N solutions, select highest PRM-scored chain
 
 **Run the experiment**:
+
 ```python
-# Open Experiments/Fixed_Pool/PRM_Fixed_Pool.ipynb  
-# Uses: fixed_pool_v2_fewshot_full_test.jsonl
-# Most rigorous evaluation - controls for generation variance
+# Open Experiments/Compute_Efficiency/PRM_Sampling_experiment.ipynb
+# Results saved to: efficiency_curve_data_250.jsonl
+# Plot generated as: efficiency_curve.png
 ```
 
 ## Results
@@ -379,8 +397,6 @@ Our experiments demonstrate that Process Reward Models provide significant advan
 - **Efficiency**: PRM at N=5 matches or exceeds Self-Consistency at N=64, representing a **12.8× reduction** in required generations
 
 The PRM approach achieves superior accuracy with far fewer generations, making it ideal for deployment in resource-constrained environments.
-
-
 
 ## Related Work
 
