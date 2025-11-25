@@ -94,7 +94,7 @@ This project was developed and tested in **Google Colab with NVIDIA A100 GPU (80
 
 ### Prerequisites
 
-This project was developed and tested in **Google Colab** (latest version as of November 2024). The following packages are required:
+This project was developed and tested in **Google Colab** (latest version as of November 2025). The following packages are required:
 
 #### Environment Requirements
 
